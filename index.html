@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BoardRealm — Juegos de Mesa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['Magic Retro', 'MedievalSharp', 'cursive'],
+                        body: ['Space Grotesk', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen">
+
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 themed-bg backdrop-blur-md border-b themed-border">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+            <a href="#" class="flex items-center gap-2 shrink-0" aria-label="BoardRealm inicio">
+                <i class="fa-solid fa-dice-d20 text-gold-adapt text-2xl"></i>
+                <span class="font-display font-900 text-xl tracking-wider themed-text">BOARD<span class="text-gold-adapt">REALM</span></span>
+            </a>
+            <div class="flex-1 max-w-md relative hidden sm:block">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 themed-text-muted text-sm"></i>
+                <input type="text" id="search-input" placeholder="Buscar juegos..." autocomplete="off" class="w-full themed-input rounded-full pl-10 pr-4 py-2 text-sm">
+            </div>
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button id="btn-agregar-juego" onclick="abrirModalAgregarJuego()" class="hidden items-center gap-2 bg-tertiary/10 text-gold-adapt border border-yellow-500/30 rounded-lg px-3 py-1.5 text-sm font-semibold hover:bg-yellow-500/20 transition" aria-label="Agregar juego">
+                    <i class="fa-solid fa-plus text-xs"></i> <span class="hidden md:inline">Agregar</span>
+                </button>
+                <button onclick="toggleTema()" class="themed-input rounded-lg p-2.5 transition hover:border-yellow-500" aria-label="Cambiar tema" id="theme-toggle-btn">
+                    <i class="fa-solid fa-sun text-gold-adapt"></i>
+                </button>
+                <div id="user-section" class="flex items-center gap-3"></div>
+                <button onclick="toggleCarrito()" class="relative themed-input rounded-lg p-2.5 hover:border-yellow-500 transition" aria-label="Abrir carrito">
+                    <i class="fa-solid fa-cart-shopping themed-text"></i>
+                    <span id="cart-badge" class="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero-section relative min-h-[85vh] flex items-center justify-center pt-16">
+        <div class="hero-bg-wave"></div>
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+        <div id="hero-particles" class="absolute inset-0 pointer-events-none"></div>
+        <div class="relative z-10 text-center px-4 max-w-3xl">
+            <p class="text-gold-adapt font-semibold tracking-widest uppercase text-sm mb-4 font-display">Tu reino de juegos de mesa</p>
+            <h1 class="hero-title font-display font-900 text-5xl md:text-7xl themed-text leading-tight mb-6 drop-shadow-2xl">
+                JUEGA,<br>CONQUISTA,<br><span class="text-gold-adapt">REPITE</span>
+            </h1>
+            <p class="themed-text-muted text-lg md:text-xl max-w-lg mx-auto mb-8 drop-shadow-md">Descubre juegos de mesa para todas las estrategias, equipos y ocasiones.</p>
+            <a href="#productos-section" class="inline-flex items-center gap-2 btn-primary px-8 py-3.5 rounded-xl transition text-lg shadow-lg">
+                <i class="fa-solid fa-dice"></i> Explorar Juegos
+            </a>
+        </div>
+    </section>
+
+    <!-- Categorías -->
+    <section id="categorias-bar" class="sticky top-16 z-40 themed-bg backdrop-blur-md border-b themed-border py-3">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex items-center gap-4">
+                <div id="categorias-container" class="flex gap-2 overflow-x-auto pb-1 scrollbar-none flex-1" role="tablist" aria-label="Categorías de juegos"></div>
+                <div class="relative shrink-0">
+                    <select id="sort-select" class="themed-input rounded-lg px-2 py-2 text-xs sm:text-sm appearance-none pr-7 cursor-pointer">
+                        <option value="default">Ordenar por</option>
+                        <option value="precio-asc">Precio: Menor a Mayor</option>
+                        <option value="precio-desc">Precio: Mayor a Menor</option>
+                        <option value="nombre-asc">Nombre: A - Z</option>
+                        <option value="nombre-desc">Nombre: Z - A</option>
+                        <option value="jugadores-asc">Jugadores: Menos a Más</option>
+                        <option value="jugadores-desc">Jugadores: Más a Menos</option>
+                    </select>
+                    <i class="fa-solid fa-sort absolute right-2 top-1/2 -translate-y-1/2 themed-text-muted text-xs pointer-events-none"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Productos -->
+    <section id="productos-section" class="max-w-7xl mx-auto px-4 py-12">
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="font-display font-700 text-2xl themed-text">Catalogo de Juegos</h2>
+            <p id="productos-count" class="themed-text-muted text-sm"></p>
+        </div>
+        <div id="productos-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+        <p id="sin-resultados" class="hidden text-center themed-text-muted py-20 text-lg">
+            <i class="fa-solid fa-ghost text-4xl mb-4 block"></i>
+            No se encontraron juegos con esos criterios.
+        </p>
+    </section>
+
+    <!-- Footer -->
+    <footer class="themed-bg border-t themed-border py-12 mt-12">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
+            <div>
+                <div class="flex items-center gap-2 mb-4">
+                    <i class="fa-solid fa-dice-d20 text-gold-adapt text-xl"></i>
+                    <span class="font-display font-700 text-lg themed-text">BOARD<span class="text-gold-adapt">REALM</span></span>
+                </div>
+                <p class="themed-text-muted">Tu tienda de confianza para descubrir mundos infinitos sobre la mesa.</p>
+            </div>
+            <div>
+                <h3 class="font-bold themed-text mb-4 text-base">Datos de Contacto</h3>
+                <ul class="space-y-3 themed-text-muted">
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-location-dot text-gold-adapt"></i> Av. Siempre Viva 742, Providencia</li>
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-phone text-gold-adapt"></i> +56 9 1234 5678</li>
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-envelope text-gold-adapt"></i> contacto@boardrealm.cl</li>
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-clock text-gold-adapt"></i> Lunes a Sábado: 10:00 - 20:00</li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="font-bold themed-text mb-4 text-base">Información</h3>
+                <ul class="space-y-2 themed-text-muted">
+                    <li><a href="#" class="hover:text-gold-adapt transition">Términos y Condiciones</a></li>
+                    <li><a href="#" class="hover:text-gold-adapt transition">Política de Privacidad</a></li>
+                    <li><a href="#" class="hover:text-gold-adapt transition">Devoluciones</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 mt-8 pt-6 border-t themed-border flex flex-col md:flex-row items-center justify-between gap-4 themed-text-muted">
+            <p>Proyecto académico — JavaScript Avanzado 2025</p>
+            <div class="flex gap-4">
+                <a href="#" class="hover:text-gold-adapt transition" aria-label="Instagram"><i class="fa-brands fa-instagram text-lg"></i></a>
+                <a href="#" class="hover:text-gold-adapt transition" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp text-lg"></i></a>
+                <a href="#" class="hover:text-gold-adapt transition" aria-label="GitHub"><i class="fa-brands fa-github text-lg"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Carrito Sidebar -->
+    <div id="cart-overlay" class="cart-overlay fixed inset-0 z-50" onclick="toggleCarrito()"></div>
+    <aside id="cart-sidebar" class="cart-sidebar fixed top-0 right-0 h-full w-full sm:w-[420px] z-50 flex flex-col" aria-label="Carrito de compras">
+        <div class="flex items-center justify-between p-5 border-b themed-border">
+            <h2 class="font-display font-700 text-lg themed-text flex items-center gap-2">
+                <i class="fa-solid fa-cart-shopping text-gold-adapt"></i> Tu Carrito
+            </h2>
+            <button onclick="toggleCarrito()" class="themed-text-muted hover:themed-text transition p-1" aria-label="Cerrar carrito">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+        <div id="cart-items" class="cart-items-list flex-1 p-4"></div>
+        <div id="cart-footer" class="border-t themed-border p-5"></div>
+    </aside>
+
+    <!-- Modal Detalle Juego -->
+    <div id="detail-modal" class="modal-backdrop fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div class="modal-content rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div id="detail-modal-body" class="p-6 md:p-10"></div>
+        </div>
+    </div>
+
+    <!-- Modal Login -->
+    <div id="login-modal" class="modal-backdrop fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div class="modal-content rounded-2xl w-full max-w-md">
+            <div class="flex items-center justify-between p-6 border-b themed-border">
+                <h2 class="font-display font-700 text-lg themed-text">Iniciar Sesion</h2>
+                <button onclick="cerrarModalLogin()" class="themed-text-muted hover:themed-text transition" aria-label="Cerrar"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="login-form" class="p-6 space-y-4" novalidate>
+                <div>
+                    <label for="login-user" class="block text-sm font-semibold themed-text-muted mb-1">Usuario</label>
+                    <input type="text" id="login-user" name="usuario" required placeholder="Ej: ADMIN" class="w-full themed-input rounded-lg px-4 py-2.5">
+                    <p class="error-msg" id="err-login-user"></p>
+                </div>
+                <div>
+                    <label for="login-pass" class="block text-sm font-semibold themed-text-muted mb-1">Contrasena</label>
+                    <input type="password" id="login-pass" name="contrasena" required placeholder="Ingresa tu contrasena" class="w-full themed-input rounded-lg px-4 py-2.5">
+                    <p class="error-msg" id="err-login-pass"></p>
+                </div>
+                <div class="themed-bg border themed-border rounded-lg p-3 text-xs themed-text-muted">
+                    <p class="font-bold themed-text mb-1"><i class="fa-solid fa-circle-info text-gold-adapt mr-1"></i> Credenciales de prueba:</p>
+                    <p>Vendedor: <span class="text-gold-adapt font-bold">ADMIN</span> / <span class="text-gold-adapt font-bold">ADMIN</span></p>
+                    <p>Cliente: Cualquier otro usuario y contrasena</p>
+                </div>
+                <button type="submit" class="w-full btn-primary py-3 rounded-xl transition text-lg shadow-lg">
+                    <i class="fa-solid fa-right-to-bracket mr-2"></i>Ingresar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Checkout -->
+    <div id="checkout-modal" class="modal-backdrop fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div class="modal-content rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between p-6 border-b themed-border">
+                <h2 class="font-display font-700 text-lg themed-text">Finalizar Compra</h2>
+                <button onclick="cerrarModalCheckout()" class="themed-text-muted hover:themed-text transition" aria-label="Cerrar"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="checkout-form" class="p-6 space-y-4" novalidate>
+                <div>
+                    <label for="chk-nombre" class="block text-sm font-semibold themed-text-muted mb-1">Nombre completo</label>
+                    <input type="text" id="chk-nombre" name="nombre" required placeholder="Ej: Maria Garcia" class="w-full themed-input rounded-lg px-4 py-2.5">
+                    <p class="error-msg" id="err-nombre"></p>
+                </div>
+                <div>
+                    <label for="chk-email" class="block text-sm font-semibold themed-text-muted mb-1">Correo electronico</label>
+                    <input type="email" id="chk-email" name="email" required placeholder="Ej: maria@correo.com" class="w-full themed-input rounded-lg px-4 py-2.5">
+                    <p class="error-msg" id="err-email"></p>
+                </div>
+                <div>
+                    <label for="chk-telefono" class="block text-sm font-semibold themed-text-muted mb-1">Telefono</label>
+                    <input type="tel" id="chk-telefono" name="telefono" required placeholder="Ej: +56 9 1234 5678" class="w-full themed-input rounded-lg px-4 py-2.5">
+                    <p class="error-msg" id="err-telefono"></p>
+                </div>
+                <div>
+                    <label for="chk-pago" class="block text-sm font-semibold themed-text-muted mb-1">Metodo de pago</label>
+                    <select id="chk-pago" name="pago" required class="w-full themed-input rounded-lg px-4 py-2.5">
+                        <option value="">Selecciona un metodo</option>
+                        <option value="efectivo">Efectivo contra entrega</option>
+                        <option value="credito">Tarjeta de credito</option>
+                        <option value="debito">Tarjeta de debito</option>
+                        <option value="transferencia">Transferencia bancaria</option>
+                    </select>
+                    <p class="error-msg" id="err-pago"></p>
+                </div>
+                <div>
+                    <label for="chk-direccion" class="block text-sm font-semibold themed-text-muted mb-1">Direccion de envio</label>
+                    <input type="text" id="chk-direccion" name="direccion" required placeholder="Ej: Av. Siempre Viva 742" class="w-full themed-input rounded-lg px-4 py-2.5">
+                    <p class="error-msg" id="err-direccion"></p>
+                </div>
+                <div class="themed-bg rounded-lg p-4 flex items-center justify-between">
+                    <span class="themed-text-muted font-semibold">Total a pagar:</span>
+                    <span id="checkout-total" class="text-gold-adapt font-display font-700 text-xl">$0</span>
+                </div>
+                <button type="submit" class="w-full btn-primary py-3 rounded-xl transition text-lg shadow-lg">
+                    <i class="fa-solid fa-lock mr-2"></i>Confirmar Compra
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Agregar Juego -->
+    <div id="addgame-modal" class="modal-backdrop fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div class="modal-content rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between p-6 border-b themed-border">
+                <h2 id="addgame-title" class="font-display font-700 text-lg themed-text">Agregar Nuevo Juego</h2>
+                <button onclick="cerrarModalAgregarJuego()" class="themed-text-muted hover:themed-text transition" aria-label="Cerrar"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="addgame-form" class="p-6 space-y-4" novalidate>
+                <div>
+                    <label for="ag-nombre" class="block text-sm font-semibold themed-text-muted mb-1">Nombre del juego</label>
+                    <input type="text" id="ag-nombre" name="nombre" required placeholder="Ej: Terraforming Mars" class="w-full themed-input rounded-lg px-4 py-2.5">
+                    <p class="error-msg" id="err-ag-nombre"></p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="ag-precio" class="block text-sm font-semibold themed-text-muted mb-1">Precio (CLP)</label>
+                        <input type="number" id="ag-precio" name="precio" required min="1000" placeholder="35000" class="w-full themed-input rounded-lg px-4 py-2.5">
+                        <p class="error-msg" id="err-ag-precio"></p>
+                    </div>
+                    <div>
+                        <label for="ag-categoria" class="block text-sm font-semibold themed-text-muted mb-1">Categoria</label>
+                        <select id="ag-categoria" name="categoria" required class="w-full themed-input rounded-lg px-4 py-2.5">
+                            <option value="">Selecciona</option>
+                        </select>
+                        <p class="error-msg" id="err-ag-categoria"></p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="ag-jugadores" class="block text-sm font-semibold themed-text-muted mb-1">Jugadores (Ej: 2-5)</label>
+                        <input type="text" id="ag-jugadores" name="jugadores" required placeholder="2-5" class="w-full themed-input rounded-lg px-4 py-2.5">
+                        <p class="error-msg" id="err-ag-jugadores"></p>
+                    </div>
+                    <div>
+                        <label for="ag-stock" class="block text-sm font-semibold themed-text-muted mb-1">Stock</label>
+                        <input type="number" id="ag-stock" name="stock" required min="1" placeholder="10" class="w-full themed-input rounded-lg px-4 py-2.5">
+                        <p class="error-msg" id="err-ag-stock"></p>
+                    </div>
+                </div>
+                <div>
+                    <label for="ag-descripcion" class="block text-sm font-semibold themed-text-muted mb-1">Descripcion</label>
+                    <textarea id="ag-descripcion" name="descripcion" required rows="3" placeholder="Describe el juego..." class="w-full themed-input rounded-lg px-4 py-2.5 resize-none"></textarea>
+                    <p class="error-msg" id="err-ag-descripcion"></p>
+                </div>
+                <button type="submit" id="ag-submit-btn" class="w-full btn-primary py-3 rounded-xl transition text-lg">
+                    <i class="fa-solid fa-plus mr-2"></i>Agregar al Catalogo
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-[70] flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- JavaScript -->
+    <script>
+    // Estado Global
+    const categorias = [
+        { id: 'todos', nombre: 'Todos', icon: 'fa-solid fa-fire' },
+        { id: 'en-equipos', nombre: 'En Equipos', icon: 'fa-solid fa-users' },
+        { id: 'por-turnos', nombre: 'Por Turnos', icon: 'fa-solid fa-hourglass-half' },
+        { id: 'cartas', nombre: 'Cartas', icon: 'fa-solid fa-diamond' },
+        { id: 'de-mesa', nombre: 'De Mesa', icon: 'fa-solid fa-chess-board' },
+        { id: 'party', nombre: 'Party', icon: 'fa-solid fa-champagne-glasses' },
+        { id: 'estrategia', nombre: 'Estrategia', icon: 'fa-solid fa-chess-rook' },
+    ];
+
+    let juegos = [
+        { id: 1, nombre: "Catan", precio: 45990, categoria: "estrategia", descripcion: "Coloniza islas, negocia recursos y construye tu imperio en este clasico absoluto de la mesa. Ideal para grupos que disfrutan la negociacion constante.", imagen: "https://www.updown.cl/wp-content/uploads/2025/08/standard_resolution-602.jpg", stock: 8, jugadoresMin: 3, jugadoresMax: 4 },
+        { id: 2, nombre: "Ticket to Ride", precio: 38990, categoria: "por-turnos", descripcion: "Construye rutas ferroviarias a traves de Norteamerica en esta aventura estrategica familiar. Facil de aprender, dificil de dominar.", imagen: "https://i5.walmartimages.cl/asr/8a7fc6a3-f986-4ffb-9a54-e576d82dbc69.ce56cc16429733675116310f823de029.jpeg?odnHeight=612&odnWidth=612&odnBg=FFFFFF", stock: 12, jugadoresMin: 2, jugadoresMax: 5 },
+        { id: 3, nombre: "UNO Flip", precio: 12990, categoria: "cartas", descripcion: "El clasico UNO con un giro: cartas de doble cara que cambian el juego por completo. Sorpresas en cada mano.", imagen: "https://cdn01.laanonima.com.ar/web/images/productos/b/0000040000/40317.jpg", stock: 20, jugadoresMin: 2, jugadoresMax: 10 },
+        { id: 4, nombre: "Jenga", precio: 24990, categoria: "de-mesa", descripcion: "Saca bloques sin derribar la torre. Nervios de acero y manos firmes requeridos. Diversion asegurada para todas las edades.", imagen: "https://olimpica.vtexassets.com/arquivos/ids/2326592-800-450?v=639004713681500000&width=800&height=450&aspect=true", stock: 15, jugadoresMin: 2, jugadoresMax: 8 },
+        { id: 5, nombre: "Codenames", precio: 29990, categoria: "en-equipos", descripcion: "Pistas de una sola palabra para que tu equipo identifique a los agentes encubiertos. Comunicacion y logica son clave.", imagen: "https://www.sportsdirect.com/images/imgzoom/89/89048499_xxl_a1.jpg", stock: 10, jugadoresMin: 4, jugadoresMax: 8 },
+        { id: 6, nombre: "Exploding Kittens", precio: 22990, categoria: "cartas", descripcion: "Un juego de cartas tactico sobre gatos y destruccion mutua. Evita los gatos explosivos a toda costa.", imagen: "https://http2.mlstatic.com/D_NQ_NP_819171-MLA92561413770_092025-O.webp", stock: 18, jugadoresMin: 2, jugadoresMax: 5 },
+        { id: 7, nombre: "Dixit", precio: 34990, categoria: "party", descripcion: "Imagenes oniricas y pistas abstractas. La creatividad es tu mejor arma para que adivinen tu carta sin que los demas lo hagan.", imagen: "https://dojiw2m9tvv09.cloudfront.net/10102/product/odyssey-26822.jpg", stock: 7, jugadoresMin: 3, jugadoresMax: 6 },
+        { id: 8, nombre: "Azul", precio: 42990, categoria: "por-turnos", descripcion: "Decora muros con azulejos portugueses. Belleza y estrategia en cada turno. Un premio al juego de familia perfecto.", imagen: "https://cuygames.com/wp-content/uploads/AZ2_11zon.webp", stock: 9, jugadoresMin: 2, jugadoresMax: 4 },
+        { id: 9, nombre: "Pandemic", precio: 47990, categoria: "en-equipos", descripcion: "Coopera con tu equipo para salvar el mundo de cuatro enfermedades letales. Venced la epidemia juntos o pereceis.", imagen: "https://ansaldo.cl/cdn/shop/files/31303.jpg?v=1746731628", stock: 6, jugadoresMin: 2, jugadoresMax: 4 },
+        { id: 10, nombre: "Ajedrez Premium", precio: 35990, categoria: "estrategia", descripcion: "Set de ajedrez con piezas talladas a mano en madera de roble noble. El juego de estrategia milenario en su maxima expresion.", imagen: "https://nacionajedrez.cl/cdn/shop/files/S1070_SET_WALNUT_DELUXE_ACACIA_DELUXE_FERRER_PIECES_03_5000x.jpg?v=1733011303", stock: 11, jugadoresMin: 2, jugadoresMax: 2 },
+        { id: 11, nombre: "Monopoly", precio: 32990, categoria: "de-mesa", descripcion: "Compra, construye y arruina a tus amigos. El clasico familiar por excelencia para tardes enteras de competencia.", imagen: "https://ansaldo.cl/cdn/shop/files/46426_1eb79363-2fb4-4525-835f-42a189afd0b4.jpg?v=1745867708", stock: 14, jugadoresMin: 2, jugadoresMax: 6 },
+        { id: 12, nombre: "Sushi Go Party!", precio: 27990, categoria: "cartas", descripcion: "Recoge sushi y crea combinaciones deliciosas en este juego de cartas agil y adorable. Mas variedades que el original.", imagen: "https://ansaldo.cl/cdn/shop/files/34996.jpg?v=1769717469", stock: 16, jugadoresMin: 2, jugadoresMax: 8 },
+        { id: 13, nombre: "Risk", precio: 39990, categoria: "estrategia", descripcion: "Conquista el mundo con ejercitos y diplomacia implacable. Solo uno puede ganar. Para estrategas audaces.", imagen: "https://http2.mlstatic.com/D_NQ_NP_921470-MLC32702144975_102019-O.webp", stock: 5, jugadoresMin: 2, jugadoresMax: 6 },
+        { id: 14, nombre: "Pictionary", precio: 19990, categoria: "en-equipos", descripcion: "Dibuja, adivina y ri sin parar con tu equipo. No hace falta ser artista, solo ser creativo y rapido.", imagen: "https://http2.mlstatic.com/D_NQ_NP_861581-MLA85162091110_052025-O.webp", stock: 13, jugadoresMin: 4, jugadoresMax: 12 },
+        { id: 15, nombre: "Twister", precio: 23990, categoria: "party", descripcion: "Enreda tu cuerpo con tus amigos. Flexibilidad y risas garantizadas. Elige bien tus colores o caeras al suelo.", imagen: "https://hasbrostore.cl/17028-thickbox_default/twister.jpg", stock: 10, jugadoresMin: 2, jugadoresMax: 4 },
+        { id: 16, nombre: "Carcassonne", precio: 36990, categoria: "por-turnos", descripcion: "Coloca fichas para construir ciudades, caminos y monasterios medievales. Expandes el mapa turno a turno.", imagen: "https://www.toysrus.es/medias/?context=bWFzdGVyfHByb2R1Y3RfaW1hZ2VzfDM1NTg2fGltYWdlL2pwZWd8YURVeUwyaGpNaTg1TWpreE9EWTNPVEUwTWpjd3xjNDBiZjVmNDE1ZmQ4NWIxYjVhODRjMjljZGY3YTYyZmQxMjEzNDY2ZDlmNzM5NjlmODVmYTUwMmFjMjUxZjhi", stock: 8, jugadoresMin: 2, jugadoresMax: 5 },
+    ];
+
+    let carrito = [];
+    let categoriaActiva = 'todos';
+    let terminoBusqueda = '';
+    let ordenActual = 'default';
+    let siguienteId = 100;
+    let editandoJuegoId = null;
+    let usuarioActual = null; 
+
+    // Validaciones
+    function sanitizarTexto(texto) {
+        if (typeof texto !== 'string') return '';
+        const div = document.createElement('div');
+        div.textContent = texto.trim();
+        return div.innerHTML;
+    }
+
+    const reglasValidacion = {
+        nombre: { regex: /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,60}$/, mensaje: 'Solo letras y espacios, entre 3 y 60 caracteres' },
+        email: { regex: /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/, mensaje: 'Ingresa un correo electronico valido' },
+        telefono: { regex: /^\+?[\d\s\-]{7,18}$/, mensaje: 'Ingresa un telefono valido' },
+        pago: { regex: /^(efectivo|credito|debito|transferencia)$/, mensaje: 'Selecciona un metodo de pago valido' },
+        direccion: { regex: /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\.\-\#\,]{5,120}$/, mensaje: 'Direccion entre 5 y 120 caracteres' },
+        nombreJuego: { regex: /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\!\?\-]{2,80}$/, mensaje: 'Nombre del juego entre 2 y 80 caracteres' },
+        precio: { regex: /^\d{3,7}$/, mensaje: 'Precio entre $100 y $9,999,999' },
+        descripcion: { regex: /^.{10,300}$/s, mensaje: 'Descripcion entre 10 y 300 caracteres' },
+        stock: { regex: /^[1-9]\d{0,2}$/, mensaje: 'Stock entre 1 y 999' },
+        categoria: { regex: /^(en-equipos|por-turnos|cartas|de-mesa|party|estrategia)$/, mensaje: 'Selecciona una categoria valida' },
+        jugadores: { regex: /^\d{1,2}-\d{1,2}$/, mensaje: 'Formato invalido (Ej: 2-5)' },
+        usuario: { regex: /^[a-zA-Z0-9_]{2,20}$/, mensaje: 'Usuario entre 2 y 20 caracteres' },
+        contrasena: { regex: /^.{2,30}$/, mensaje: 'Contrasena muy corta' }
+    };
+
+    function validarEntrada(valor, tipo) {
+        const regla = reglasValidacion[tipo]; if (!regla) return { valido: false, mensaje: 'Tipo invalido' };
+        if (!valor || valor.toString().trim() === '') return { valido: false, mensaje: 'Este campo es obligatorio' };
+        if (!regla.regex.test(valor.toString().trim())) return { valido: false, mensaje: regla.mensaje };
+        return { valido: true, mensaje: '' };
+    }
+
+    function mostrarErrorCampo(inputId, errorId, mensaje) {
+        const input = document.getElementById(inputId); const errorEl = document.getElementById(errorId);
+        if (input) { input.classList.add('field-error'); input.classList.remove('field-success'); input.classList.add('shake'); setTimeout(() => input.classList.remove('shake'), 400); }
+        if (errorEl) errorEl.textContent = mensaje;
+    }
+    
+    function limpiarErrorCampo(inputId, errorId) {
+        const input = document.getElementById(inputId); const errorEl = document.getElementById(errorId);
+        if (input) { input.classList.remove('field-error'); input.classList.add('field-success'); }
+        if (errorEl) errorEl.textContent = '';
+    }
+
+    // Utilidades
+    function formatearPrecio(precio) { return '$' + Number(precio).toLocaleString('es-CL'); }
+    function obtenerCategoria(id) { return categorias.find(c => c.id === id) || categorias[0]; }
+    function generarId() { return ++siguienteId; }
+
+    function crearElemento(tag, atributos = {}, hijos = []) {
+        const el = document.createElement(tag);
+        for (const [key, val] of Object.entries(atributos)) {
+            if (key === 'className') el.className = val;
+            else if (key === 'textContent') el.textContent = val;
+            else if (key === 'dataset') { for (const [k, v] of Object.entries(val)) el.dataset[k] = v; }
+            else if (key.startsWith('on') && typeof val === 'function') el.addEventListener(key.slice(2).toLowerCase(), val);
+            else el.setAttribute(key, val);
+        }
+        hijos.forEach(hijo => {
+            if (typeof hijo === 'string') el.appendChild(document.createTextNode(hijo));
+            else if (hijo instanceof HTMLElement) el.appendChild(hijo);
+        });
+        return el;
+    }
+
+    // Autenticación
+    function procesarLogin(event) {
+        event.preventDefault();
+        const usuario = document.getElementById('login-user').value; const contrasena = document.getElementById('login-pass').value;
+        let errores = 0;
+        const vU = validarEntrada(usuario, 'usuario'); if (!vU.valido) { mostrarErrorCampo('login-user', 'err-login-user', vU.mensaje); errores++; } else limpiarErrorCampo('login-user', 'err-login-user');
+        const vP = validarEntrada(contrasena, 'contrasena'); if (!vP.valido) { mostrarErrorCampo('login-pass', 'err-login-pass', vP.mensaje); errores++; } else limpiarErrorCampo('login-pass', 'err-login-pass');
+        if (errores > 0) return;
+
+        if (usuario === "ADMIN" && contrasena === "ADMIN") { usuarioActual = { username: sanitizarTexto(usuario), role: 'vendedor' }; mostrarToast('Bienvenido Administrador', 'success'); }
+        else { usuarioActual = { username: sanitizarTexto(usuario), role: 'cliente' }; mostrarToast('Sesion iniciada: ' + usuarioActual.username, 'success'); }
+        cerrarModalLogin(); actualizarUISegunRol();
+    }
+    
+    function cerrarSesion() { 
+        usuarioActual = null; carrito = []; mostrarToast('Sesion cerrada', 'info'); renderizarCarrito(); renderizarContadorCarrito(); actualizarUISegunRol(); 
+    }
+    
+    function actualizarUISegunRol() {
+        const btnAgregar = document.getElementById('btn-agregar-juego'); const userSection = document.getElementById('user-section'); userSection.innerHTML = ''; 
+        if (usuarioActual) {
+            if (usuarioActual.role === 'vendedor') { btnAgregar.classList.remove('hidden'); btnAgregar.classList.add('sm:flex'); } else { btnAgregar.classList.add('hidden'); btnAgregar.classList.remove('sm:flex'); }
+            const roleIcon = usuarioActual.role === 'vendedor' ? 'fa-user-shield' : 'fa-user';
+            const userInfoDiv = crearElemento('div', { className: 'hidden sm:flex flex-col items-end' });
+            userInfoDiv.appendChild(crearElemento('span', { className: 'text-xs font-bold text-gold-adapt', textContent: usuarioActual.role === 'vendedor' ? 'Vendedor' : 'Cliente' }));
+            userInfoDiv.appendChild(crearElemento('span', { className: 'text-sm themed-text font-semibold', textContent: usuarioActual.username }));
+            const logoutBtn = crearElemento('button', { className: 'text-xs themed-text-muted hover:text-red-500 transition underline ml-2', onClick: cerrarSesion, textContent: 'Salir' });
+            userSection.appendChild(crearElemento('i', { className: `fa-solid ${roleIcon} text-gold-adapt text-lg` }));
+            userSection.appendChild(userInfoDiv); userSection.appendChild(logoutBtn);
+        } else {
+            btnAgregar.classList.add('hidden'); btnAgregar.classList.remove('sm:flex');
+            const loginBtn = crearElemento('button', { className: 'flex items-center gap-2 btn-outline rounded-lg px-3 py-1.5 text-sm font-semibold', onClick: abrirModalLogin });
+            loginBtn.appendChild(crearElemento('i', { className: 'fa-solid fa-right-to-bracket' })); loginBtn.appendChild(document.createTextNode(' Ingresar')); userSection.appendChild(loginBtn);
+        }
+        renderizarProductos(obtenerJuegosFiltrados());
+    }
+
+    // Temas
+    function toggleTema() {
+        const html = document.documentElement; const icon = document.querySelector('#theme-toggle-btn i');
+        if (html.getAttribute('data-theme') === 'dark') { html.setAttribute('data-theme', 'light'); icon.className = 'fa-solid fa-moon text-gold-adapt'; } 
+        else { html.setAttribute('data-theme', 'dark'); icon.className = 'fa-solid fa-sun text-gold-adapt'; }
+    }
+
+    // Renderizado
+    function renderizarCategorias() {
+        const container = document.getElementById('categorias-container'); container.innerHTML = '';
+        categorias.forEach(cat => {
+            const activo = categoriaActiva === cat.id;
+            const pill = crearElemento('button', { className: `cat-pill flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition ${activo ? 'active' : ''}`, dataset: { cat: cat.id }, onClick: () => filtrarPorCategoria(cat.id) });
+            pill.appendChild(crearElemento('i', { className: cat.icon })); 
+            pill.appendChild(document.createTextNode(' ' + cat.nombre)); container.appendChild(pill);
+        });
+    }
+
+    function renderizarProductos(lista) {
+        const grid = document.getElementById('productos-grid'); const sinResultados = document.getElementById('sin-resultados'); const countEl = document.getElementById('productos-count');
+        grid.innerHTML = ''; countEl.textContent = lista.length + ' juego' + (lista.length !== 1 ? 's' : '');
+        if (lista.length === 0) { sinResultados.classList.remove('hidden'); return; } sinResultados.classList.add('hidden');
+
+        lista.forEach((juego, index) => {
+            const cat = obtenerCategoria(juego.categoria); const enCarrito = carrito.find(item => item.juegoId === juego.id); const stockBajo = juego.stock <= 5;
+            const card = crearElemento('article', { className: 'product-card themed-card rounded-2xl overflow-hidden card-enter', style: `animation-delay: ${index * 0.06}s`, onClick: () => verDetalleJuego(juego.id) });
+            
+            const imgWrap = crearElemento('div', { className: 'relative overflow-hidden h-48' });
+            imgWrap.appendChild(crearElemento('img', { src: juego.imagen, alt: juego.nombre, className: 'card-img w-full h-full object-cover', loading: 'lazy' }));
+            
+            const badge = crearElemento('span', { className: 'absolute top-3 left-3 text-xs font-bold px-2.5 py-1 rounded-full bg-black/50 text-white border border-white/20 backdrop-blur-sm' });
+            badge.appendChild(crearElemento('i', { className: cat.icon + ' mr-1' })); badge.appendChild(document.createTextNode(cat.nombre)); imgWrap.appendChild(badge);
+
+            const playersBadge = crearElemento('span', { className: 'absolute top-3 right-3 text-xs font-bold px-2.5 py-1 rounded-full bg-black/50 text-white border border-white/20 backdrop-blur-sm' });
+            playersBadge.appendChild(crearElemento('i', { className: 'fa-solid fa-users mr-1' })); playersBadge.appendChild(document.createTextNode(`${juego.jugadoresMin}-${juego.jugadoresMax}`)); imgWrap.appendChild(playersBadge);
+
+            if (usuarioActual && usuarioActual.role === 'vendedor') {
+                const deleteBtn = crearElemento('button', { className: 'delete-game-btn absolute bottom-3 right-3 w-8 h-8 rounded-full bg-red-500/80 border border-red-400 text-white flex items-center justify-center text-xs hover:bg-red-600 transition', onClick: (e) => { e.stopPropagation(); eliminarJuegoCatalogo(juego.id); } });
+                deleteBtn.appendChild(crearElemento('i', { className: 'fa-solid fa-trash-can' })); imgWrap.appendChild(deleteBtn);
+            }
+            card.appendChild(imgWrap);
+
+            const info = crearElemento('div', { className: 'p-4 flex flex-col gap-2' });
+            const header = crearElemento('div', { className: 'flex items-start justify-between gap-2' });
+            header.appendChild(crearElemento('h3', { className: 'font-bold themed-text text-base leading-tight', textContent: juego.nombre }));
+            header.appendChild(crearElemento('span', { className: `text-xs font-semibold whitespace-nowrap ${stockBajo ? 'stock-low' : 'stock-ok'}`, textContent: juego.stock + ' uds' }));
+            info.appendChild(header);
+
+            const descCorta = juego.descripcion.length > 65 ? juego.descripcion.substring(0, 65) + '...' : juego.descripcion;
+            info.appendChild(crearElemento('p', { className: 'themed-text-muted text-sm leading-relaxed', textContent: descCorta }));
+
+            const footer = crearElemento('div', { className: 'flex items-center justify-between mt-2' });
+            footer.appendChild(crearElemento('span', { className: 'text-gold-adapt font-display font-700 text-lg', textContent: formatearPrecio(juego.precio) }));
+
+            const addBtn = crearElemento('button', {
+                className: `btn-add-cart flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-bold transition ${enCarrito ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'btn-primary'}`,
+                onClick: (e) => { e.stopPropagation(); agregarAlCarrito(juego.id); }
+            });
+            if (enCarrito) { addBtn.appendChild(crearElemento('i', { className: 'fa-solid fa-check' })); addBtn.appendChild(document.createTextNode(' (' + enCarrito.cantidad + ')')); }
+            else if (juego.stock <= 0) { addBtn.className = 'flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-bold themed-text-muted border themed-border cursor-not-allowed'; addBtn.disabled = true; addBtn.appendChild(document.createTextNode('Agotado')); }
+            else { addBtn.appendChild(crearElemento('i', { className: 'fa-solid fa-cart-plus' })); addBtn.appendChild(document.createTextNode(' Agregar')); }
+            footer.appendChild(addBtn); info.appendChild(footer); card.appendChild(info); grid.appendChild(card);
+        });
+    }
+
+    function renderizarCarrito() {
+        const container = document.getElementById('cart-items'); const footer = document.getElementById('cart-footer'); container.innerHTML = ''; footer.innerHTML = '';
+        if (carrito.length === 0) {
+            const empty = crearElemento('div', { className: 'flex flex-col items-center justify-center h-full themed-text-muted py-16' });
+            empty.appendChild(crearElemento('i', { className: 'fa-solid fa-cart-shopping text-4xl mb-4 opacity-30' })); empty.appendChild(crearElemento('p', { className: 'text-lg font-semibold', textContent: 'Tu carrito esta vacio' }));
+            container.appendChild(empty); return;
+        }
+        carrito.forEach(item => {
+            const juego = juegos.find(j => j.id === item.juegoId); if (!juego) return; const subtotal = juego.precio * item.cantidad;
+            const row = crearElemento('div', { className: 'flex gap-3 p-3 themed-bg rounded-xl mb-3 themed-border' });
+            row.appendChild(crearElemento('img', { src: juego.imagen, alt: juego.nombre, className: 'w-16 h-16 rounded-lg object-cover shrink-0' }));
+            const info = crearElemento('div', { className: 'flex-1 min-w-0' }); info.appendChild(crearElemento('p', { className: 'font-bold themed-text text-sm truncate', textContent: juego.nombre }));
+            const qtyRow = crearElemento('div', { className: 'flex items-center gap-2 mt-2' });
+            const btnMinus = crearElemento('button', { className: 'w-6 h-6 rounded themed-border themed-text-muted text-xs flex items-center justify-center hover:themed-text transition', onClick: () => actualizarCantidadCarrito(juego.id, -1) }); btnMinus.appendChild(document.createTextNode('-')); qtyRow.appendChild(btnMinus);
+            qtyRow.appendChild(crearElemento('span', { className: 'themed-text text-sm font-bold w-6 text-center', textContent: item.cantidad.toString() }));
+            const btnPlus = crearElemento('button', { className: 'w-6 h-6 rounded themed-border themed-text-muted text-xs flex items-center justify-center hover:themed-text transition', onClick: () => actualizarCantidadCarrito(juego.id, 1) }); btnPlus.appendChild(document.createTextNode('+')); qtyRow.appendChild(btnPlus);
+            info.appendChild(qtyRow); row.appendChild(info);
+            const right = crearElemento('div', { className: 'flex flex-col items-end justify-between' }); right.appendChild(crearElemento('span', { className: 'text-gold-adapt font-bold text-sm', textContent: formatearPrecio(subtotal) }));
+            const btnDel = crearElemento('button', { className: 'text-red-400 hover:text-red-300 text-xs transition', onClick: () => eliminarDelCarrito(juego.id) }); btnDel.appendChild(crearElemento('i', { className: 'fa-solid fa-trash-can' })); right.appendChild(btnDel);
+            row.appendChild(right); container.appendChild(row);
+        });
+        const total = calcularTotalCarrito(); const totalRow = crearElemento('div', { className: 'flex items-center justify-between mb-4' }); totalRow.appendChild(crearElemento('span', { className: 'themed-text-muted font-semibold', textContent: 'Total:' })); totalRow.appendChild(crearElemento('span', { className: 'text-gold-adapt font-display font-700 text-2xl', textContent: formatearPrecio(total) })); footer.appendChild(totalRow);
+        const btnCheckout = crearElemento('button', { className: 'w-full btn-primary py-3 rounded-xl transition text-base shadow-lg mb-2', onClick: abrirModalCheckout }); btnCheckout.appendChild(crearElemento('i', { className: 'fa-solid fa-credit-card mr-2' })); btnCheckout.appendChild(document.createTextNode('Finalizar Compra')); footer.appendChild(btnCheckout);
+        const btnVaciar = crearElemento('button', { className: 'w-full btn-outline py-2.5 rounded-xl transition text-sm hover:text-red-400 hover:border-red-400', onClick: vaciarCarrito }); btnVaciar.appendChild(document.createTextNode('Vaciar carrito')); footer.appendChild(btnVaciar);
+    }
+
+    function renderizarContadorCarrito() {
+        const badge = document.getElementById('cart-badge'); const totalItems = carrito.reduce((sum, item) => sum + item.cantidad, 0);
+        if (totalItems > 0) { badge.classList.remove('hidden'); badge.textContent = totalItems > 99 ? '99+' : totalItems.toString(); } else { badge.classList.add('hidden'); }
+    }
+
+    // Modal Detalle (X restaurada y separada con padding derecho en la columna de texto)
+    function verDetalleJuego(id) {
+        const juego = juegos.find(j => j.id === id); if (!juego) return;
+        const cat = obtenerCategoria(juego.categoria); const enCarrito = carrito.find(item => item.juegoId === juego.id);
+        const container = document.getElementById('detail-modal-body'); container.innerHTML = '';
+
+        const wrapper = crearElemento('div', { className: 'relative' });
+        
+        // Botón de cerrar con estilo original, posicionado dentro del padding del modal
+        const closeBtn = crearElemento('button', { 
+            className: 'absolute top-4 right-4 md:top-6 md:right-6 z-10 themed-text-muted hover:text-red-400 transition', 
+            onClick: cerrarModalDetalle, 
+            ariaLabel: 'Cerrar' 
+        });
+        closeBtn.appendChild(crearElemento('i', { className: 'fa-solid fa-xmark text-2xl' })); 
+        wrapper.appendChild(closeBtn);
+
+        const grid = crearElemento('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-8' });
+        const imgCol = crearElemento('div', {}); imgCol.appendChild(crearElemento('img', { src: juego.imagen, alt: juego.nombre, className: 'w-full aspect-video object-cover rounded-xl shadow-lg' }));
+        grid.appendChild(imgCol);
+
+        // Añadido 'pr-8 md:pr-12' para crear espacio donde va la X y evitar que el texto choque
+        const infoCol = crearElemento('div', { className: 'flex flex-col gap-4 pr-8 md:pr-12' });
+        const badges = crearElemento('div', { className: 'flex gap-2 flex-wrap' });
+        const catBadge = crearElemento('span', { className: 'text-xs font-bold px-3 py-1 rounded-full themed-border themed-bg text-gold-adapt' }); catBadge.appendChild(crearElemento('i', { className: cat.icon + ' mr-1' })); catBadge.appendChild(document.createTextNode(cat.nombre)); badges.appendChild(catBadge);
+        const playersBadge = crearElemento('span', { className: 'text-xs font-bold px-3 py-1 rounded-full themed-border themed-bg themed-text-muted' }); playersBadge.appendChild(crearElemento('i', { className: 'fa-solid fa-users mr-1' })); playersBadge.appendChild(document.createTextNode(`${juego.jugadoresMin}-${juego.jugadoresMax} jugadores`)); badges.appendChild(playersBadge);
+        const stockBadge = crearElemento('span', { className: `text-xs font-bold px-3 py-1 rounded-full themed-border themed-bg ${juego.stock <= 5 ? 'stock-low' : 'stock-ok'}` }); stockBadge.appendChild(crearElemento('i', { className: 'fa-solid fa-boxes-stacked mr-1' })); stockBadge.appendChild(document.createTextNode(`${juego.stock} en stock`)); badges.appendChild(stockBadge);
+        infoCol.appendChild(badges);
+
+        infoCol.appendChild(crearElemento('h2', { className: 'font-display font-900 text-3xl md:text-4xl themed-text leading-tight', textContent: juego.nombre }));
+        infoCol.appendChild(crearElemento('p', { className: 'themed-text-muted text-base leading-relaxed', textContent: juego.descripcion }));
+        infoCol.appendChild(crearElemento('span', { className: 'text-gold-adapt font-display font-700 text-3xl mt-2', textContent: formatearPrecio(juego.precio) }));
+
+        const addBtn = crearElemento('button', {
+            className: `btn-add-cart w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-base font-bold transition mt-4 ${enCarrito ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'btn-primary'}`,
+            onClick: () => { agregarAlCarrito(juego.id); verDetalleJuego(juego.id); }
+        });
+        if (enCarrito) { addBtn.appendChild(crearElemento('i', { className: 'fa-solid fa-check' })); addBtn.appendChild(document.createTextNode(' En carrito (' + enCarrito.cantidad + ') - Agregar otro')); }
+        else if (juego.stock <= 0) { addBtn.className = 'w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-base font-bold themed-text-muted border themed-border cursor-not-allowed'; addBtn.disabled = true; addBtn.appendChild(document.createTextNode('Agotado')); }
+        else { addBtn.appendChild(crearElemento('i', { className: 'fa-solid fa-cart-plus' })); addBtn.appendChild(document.createTextNode(' Agregar al Carrito')); }
+        infoCol.appendChild(addBtn);
+
+        if (usuarioActual && usuarioActual.role === 'vendedor') {
+            const vendorActions = crearElemento('div', { className: 'flex gap-2 mt-4' });
+            const deleteBtn = crearElemento('button', { className: 'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition', onClick: () => { eliminarJuegoCatalogo(juego.id); cerrarModalDetalle(); } });
+            deleteBtn.appendChild(crearElemento('i', { className: 'fa-solid fa-trash-can' })); deleteBtn.appendChild(document.createTextNode(' Eliminar del Catálogo'));
+            vendorActions.appendChild(deleteBtn);
+            infoCol.appendChild(vendorActions);
+        }
+
+        grid.appendChild(infoCol); wrapper.appendChild(grid); container.appendChild(wrapper);
+        abrirModalDetalle();
+    }
+
+    function abrirModalDetalle() { document.getElementById('detail-modal').classList.add('open'); document.body.style.overflow = 'hidden'; }
+    function cerrarModalDetalle() { document.getElementById('detail-modal').classList.remove('open'); document.body.style.overflow = ''; }
+
+    // Carrito
+    function agregarAlCarrito(id) {
+        const juego = juegos.find(j => j.id === id); if (!juego || juego.stock <= 0) return;
+        const existente = carrito.find(item => item.juegoId === id);
+        if (existente) { if (existente.cantidad < juego.stock) existente.cantidad++; else { mostrarToast('Stock maximo alcanzado', 'error'); return; } }
+        else { carrito.push({ juegoId: id, cantidad: 1 }); }
+        mostrarToast(juego.nombre + ' agregado al carrito', 'success'); renderizarCarrito(); renderizarContadorCarrito(); renderizarProductos(obtenerJuegosFiltrados());
+    }
+    
+    function eliminarDelCarrito(id) { carrito = carrito.filter(item => item.juegoId !== id); mostrarToast('Eliminado del carrito', 'info'); renderizarCarrito(); renderizarContadorCarrito(); renderizarProductos(obtenerJuegosFiltrados()); }
+    
+    function actualizarCantidadCarrito(id, delta) {
+        const item = carrito.find(i => i.juegoId === id); const juego = juegos.find(j => j.id === id); if (!item || !juego) return;
+        item.cantidad += delta; if (item.cantidad <= 0) { eliminarDelCarrito(id); return; }
+        if (item.cantidad > juego.stock) { item.cantidad = juego.stock; mostrarToast('Stock maximo: ' + juego.stock, 'error'); }
+        renderizarCarrito(); renderizarContadorCarrito(); renderizarProductos(obtenerJuegosFiltrados());
+    }
+    
+    function calcularTotalCarrito() { return carrito.reduce((total, item) => { const juego = juegos.find(j => j.id === item.juegoId); return total + (juego ? juego.precio * item.cantidad : 0); }, 0); }
+    function vaciarCarrito() { if (carrito.length === 0) return; carrito = []; mostrarToast('Carrito vaciado', 'info'); renderizarCarrito(); renderizarContadorCarrito(); renderizarProductos(obtenerJuegosFiltrados()); }
+
+    // Filtrado y Orden
+    function obtenerJuegosFiltrados() {
+        let filtrados = [...juegos];
+        if (categoriaActiva !== 'todos') filtrados = filtrados.filter(j => j.categoria === categoriaActiva);
+        if (terminoBusqueda.trim()) { const t = terminoBusqueda.toLowerCase().trim(); filtrados = filtrados.filter(j => j.nombre.toLowerCase().includes(t) || j.descripcion.toLowerCase().includes(t)); }
+        switch (ordenActual) {
+            case 'precio-asc': filtrados.sort((a, b) => a.precio - b.precio); break; case 'precio-desc': filtrados.sort((a, b) => b.precio - a.precio); break;
+            case 'nombre-asc': filtrados.sort((a, b) => a.nombre.localeCompare(b.nombre)); break; case 'nombre-desc': filtrados.sort((a, b) => b.nombre.localeCompare(a.nombre)); break;
+            case 'jugadores-asc': filtrados.sort((a, b) => a.jugadoresMax - b.jugadoresMax); break; case 'jugadores-desc': filtrados.sort((a, b) => b.jugadoresMax - a.jugadoresMax); break;
+        }
+        return filtrados;
+    }
+    function filtrarPorCategoria(catId) { categoriaActiva = catId; renderizarCategorias(); renderizarProductos(obtenerJuegosFiltrados()); }
+    function buscarJuegos(termino) { terminoBusqueda = termino; renderizarProductos(obtenerJuegosFiltrados()); }
+    function ordenarJuegos(criterio) { ordenActual = criterio; renderizarProductos(obtenerJuegosFiltrados()); }
+
+    // CRUD
+    function eliminarJuegoCatalogo(id) {
+        if (!usuarioActual || usuarioActual.role !== 'vendedor') return mostrarToast('Sin permisos', 'error');
+        juegos = juegos.filter(j => j.id !== id); carrito = carrito.filter(item => item.juegoId !== id); mostrarToast('Eliminado del catalogo', 'info'); renderizarProductos(obtenerJuegosFiltrados()); renderizarCarrito(); renderizarContadorCarrito();
+    }
+    
+    function abrirModalAgregarJuego() {
+        if (!usuarioActual || usuarioActual.role !== 'vendedor') return mostrarToast('Solo vendedores', 'error');
+        editandoJuegoId = null; document.getElementById('addgame-form').reset(); document.getElementById('addgame-title').textContent = 'Agregar Nuevo Juego'; document.getElementById('ag-submit-btn').innerHTML = '<i class="fa-solid fa-plus mr-2"></i>Agregar al Catalogo'; document.getElementById('addgame-modal').classList.add('open'); document.body.style.overflow = 'hidden';
+    }
+    
+    function cerrarModalAgregarJuego() { document.getElementById('addgame-modal').classList.remove('open'); document.body.style.overflow = ''; editandoJuegoId = null; }
+    
+    function procesarAgregarJuego(event) {
+        event.preventDefault(); if (!usuarioActual || usuarioActual.role !== 'vendedor') return;
+        const nombre = document.getElementById('ag-nombre').value; const precio = document.getElementById('ag-precio').value; const categoria = document.getElementById('ag-categoria').value; const descripcion = document.getElementById('ag-descripcion').value; const stock = document.getElementById('ag-stock').value; const jugadores = document.getElementById('ag-jugadores').value;
+        let errores = 0;
+        const vN = validarEntrada(nombre, 'nombreJuego'); if (!vN.valido) { mostrarErrorCampo('ag-nombre', 'err-ag-nombre', vN.mensaje); errores++; } else limpiarErrorCampo('ag-nombre', 'err-ag-nombre');
+        const vP = validarEntrada(precio, 'precio'); if (!vP.valido) { mostrarErrorCampo('ag-precio', 'err-ag-precio', vP.mensaje); errores++; } else limpiarErrorCampo('ag-precio', 'err-ag-precio');
+        const vC = validarEntrada(categoria, 'categoria'); if (!vC.valido) { mostrarErrorCampo('ag-categoria', 'err-ag-categoria', vC.mensaje); errores++; } else limpiarErrorCampo('ag-categoria', 'err-ag-categoria');
+        const vD = validarEntrada(descripcion, 'descripcion'); if (!vD.valido) { mostrarErrorCampo('ag-descripcion', 'err-ag-descripcion', vD.mensaje); errores++; } else limpiarErrorCampo('ag-descripcion', 'err-ag-descripcion');
+        const vS = validarEntrada(stock, 'stock'); if (!vS.valido) { mostrarErrorCampo('ag-stock', 'err-ag-stock', vS.mensaje); errores++; } else limpiarErrorCampo('ag-stock', 'err-ag-stock');
+        const vJ = validarEntrada(jugadores, 'jugadores'); if (!vJ.valido) { mostrarErrorCampo('ag-jugadores', 'err-ag-jugadores', vJ.mensaje); errores++; } else limpiarErrorCampo('ag-jugadores', 'err-ag-jugadores');
+        if (errores > 0) return;
+        const [min, max] = jugadores.split('-').map(Number);
+        juegos.push({ id: generarId(), nombre: sanitizarTexto(nombre), precio: parseInt(precio), categoria, descripcion: sanitizarTexto(descripcion), imagen: 'https://picsum.photos/seed/game' + siguienteId + '/400/300', stock: parseInt(stock), jugadoresMin: min, jugadoresMax: max }); mostrarToast(nombre + ' agregado', 'success'); cerrarModalAgregarJuego(); renderizarProductos(obtenerJuegosFiltrados());
+    }
+
+    // Checkout
+    function procesarCheckout(event) {
+        event.preventDefault(); const nombre = document.getElementById('chk-nombre').value; const email = document.getElementById('chk-email').value; const telefono = document.getElementById('chk-telefono').value; const pago = document.getElementById('chk-pago').value; const direccion = document.getElementById('chk-direccion').value;
+        let errores = 0;
+        const v1 = validarEntrada(nombre, 'nombre'); if (!v1.valido) { mostrarErrorCampo('chk-nombre', 'err-nombre', v1.mensaje); errores++; } else limpiarErrorCampo('chk-nombre', 'err-nombre');
+        const v2 = validarEntrada(email, 'email'); if (!v2.valido) { mostrarErrorCampo('chk-email', 'err-email', v2.mensaje); errores++; } else limpiarErrorCampo('chk-email', 'err-email');
+        const v3 = validarEntrada(telefono, 'telefono'); if (!v3.valido) { mostrarErrorCampo('chk-telefono', 'err-telefono', v3.mensaje); errores++; } else limpiarErrorCampo('chk-telefono', 'err-telefono');
+        const v4 = validarEntrada(pago, 'pago'); if (!v4.valido) { mostrarErrorCampo('chk-pago', 'err-pago', v4.mensaje); errores++; } else limpiarErrorCampo('chk-pago', 'err-pago');
+        const v5 = validarEntrada(direccion, 'direccion'); if (!v5.valido) { mostrarErrorCampo('chk-direccion', 'err-direccion', v5.mensaje); errores++; } else limpiarErrorCampo('chk-direccion', 'err-direccion');
+        if (errores > 0) return;
+        carrito.forEach(item => { const juego = juegos.find(j => j.id === item.juegoId); if (juego) juego.stock = Math.max(0, juego.stock - item.cantidad); });
+        const total = calcularTotalCarrito(); carrito = []; cerrarModalCheckout(); document.getElementById('checkout-form').reset(); mostrarToast('Compra por ' + formatearPrecio(total) + ' exitosa!', 'success'); renderizarCarrito(); renderizarContadorCarrito(); renderizarProductos(obtenerJuegosFiltrados());
+    }
+
+    // UI y Modales
+    function toggleCarrito() {
+        const sidebar = document.getElementById('cart-sidebar'); const overlay = document.getElementById('cart-overlay');
+        if (sidebar.classList.contains('open')) { sidebar.classList.remove('open'); overlay.classList.remove('open'); document.body.style.overflow = ''; } else { sidebar.classList.add('open'); overlay.classList.add('open'); document.body.style.overflow = 'hidden'; }
+    }
+    
+    function abrirModalCheckout() {
+        if (!usuarioActual) { mostrarToast('Debes iniciar sesion', 'error'); toggleCarrito(); setTimeout(() => abrirModalLogin(), 350); return; }
+        if (carrito.length === 0) { mostrarToast('Carrito vacio', 'error'); return; }
+        toggleCarrito(); setTimeout(() => { document.getElementById('checkout-total').textContent = formatearPrecio(calcularTotalCarrito()); document.getElementById('checkout-modal').classList.add('open'); document.body.style.overflow = 'hidden'; }, 350);
+    }
+    
+    function cerrarModalCheckout() { document.getElementById('checkout-modal').classList.remove('open'); document.body.style.overflow = ''; }
+    function abrirModalLogin() { document.getElementById('login-form').reset(); document.getElementById('login-modal').classList.add('open'); document.body.style.overflow = 'hidden'; }
+    function cerrarModalLogin() { document.getElementById('login-modal').classList.remove('open'); document.body.style.overflow = ''; }
+
+    function mostrarToast(mensaje, tipo = 'info') {
+        const container = document.getElementById('toast-container'); const colores = { success: 'border-green-500 text-green-400', error: 'border-red-500 text-red-400', info: 'border-yellow-500 text-yellow-400' }; const iconos = { success: 'fa-solid fa-check-circle', error: 'fa-solid fa-exclamation-circle', info: 'fa-solid fa-info-circle' };
+        const toast = crearElemento('div', { className: `toast pointer-events-auto flex items-center gap-3 px-5 py-3 rounded-xl border shadow-2xl backdrop-blur-sm ${colores[tipo] || colores.info}` });
+        toast.appendChild(crearElemento('i', { className: iconos[tipo] || iconos.info })); toast.appendChild(crearElemento('span', { className: 'text-sm font-semibold', textContent: mensaje })); container.appendChild(toast); setTimeout(() => { toast.classList.add('removing'); setTimeout(() => toast.remove(), 350); }, 3500);
+    }
+
+    function crearParticulasHero() {
+        const container = document.getElementById('hero-particles'); const iconos = ['fa-solid fa-dice', 'fa-solid fa-chess-knight', 'fa-solid fa-puzzle-piece', 'fa-solid fa-crown'];
+        for (let i = 0; i < 12; i++) { container.appendChild(crearElemento('i', { className: 'particle ' + iconos[Math.floor(Math.random() * iconos.length)], style: `left: ${Math.random() * 100}%; animation-duration: ${15 + Math.random() * 20}s; animation-delay: ${-Math.random() * 20}s; font-size: ${1 + Math.random() * 1.5}rem;` })); }
+    }
+
+    function configurarValidacionEnVivo() {
+        const checkFields = [
+            { input: 'chk-nombre', error: 'err-nombre', tipo: 'nombre' }, { input: 'chk-email', error: 'err-email', tipo: 'email' }, { input: 'chk-telefono', error: 'err-telefono', tipo: 'telefono' }, { input: 'chk-pago', error: 'err-pago', tipo: 'pago' }, { input: 'chk-direccion', error: 'err-direccion', tipo: 'direccion' },
+            { input: 'ag-nombre', error: 'err-ag-nombre', tipo: 'nombreJuego' }, { input: 'ag-precio', error: 'err-ag-precio', tipo: 'precio' }, { input: 'ag-categoria', error: 'err-ag-categoria', tipo: 'categoria' }, { input: 'ag-descripcion', error: 'err-ag-descripcion', tipo: 'descripcion' }, { input: 'ag-stock', error: 'err-ag-stock', tipo: 'stock' }, { input: 'ag-jugadores', error: 'err-ag-jugadores', tipo: 'jugadores' },
+            { input: 'login-user', error: 'err-login-user', tipo: 'usuario' }, { input: 'login-pass', error: 'err-login-pass', tipo: 'contrasena' },
+        ];
+        checkFields.forEach(f => { const el = document.getElementById(f.input); if (!el) return; el.addEventListener('input', () => { const result = validarEntrada(el.value, f.tipo); if (result.valido) limpiarErrorCampo(f.input, f.error); else mostrarErrorCampo(f.input, f.error, result.mensaje); }); });
+    }
+
+    // Inicio
+    function inicializarApp() {
+        const selectCat = document.getElementById('ag-categoria'); categorias.filter(c => c.id !== 'todos').forEach(cat => { selectCat.appendChild(crearElemento('option', { value: cat.id, textContent: cat.nombre })); });
+        renderizarCategorias(); renderizarProductos(juegos); renderizarCarrito(); renderizarContadorCarrito(); crearParticulasHero(); actualizarUISegunRol();
+        document.getElementById('checkout-form').addEventListener('submit', procesarCheckout); document.getElementById('addgame-form').addEventListener('submit', procesarAgregarJuego); document.getElementById('login-form').addEventListener('submit', procesarLogin);
+        document.getElementById('sort-select').addEventListener('change', (e) => ordenarJuegos(e.target.value));
+        let searchTimeout; document.getElementById('search-input').addEventListener('input', (e) => { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => buscarJuegos(e.target.value), 250); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') { cerrarModalCheckout(); cerrarModalAgregarJuego(); cerrarModalLogin(); cerrarModalDetalle(); const sidebar = document.getElementById('cart-sidebar'); if (sidebar.classList.contains('open')) toggleCarrito(); }
+        });
+        configurarValidacionEnVivo(); document.querySelectorAll('a[href^="#"]').forEach(a => { a.addEventListener('click', (e) => { e.preventDefault(); const target = document.querySelector(a.getAttribute('href')); if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }); });
+    }
+    
+    document.addEventListener('DOMContentLoaded', inicializarApp);
+    </script>
+</body>
+</html>
